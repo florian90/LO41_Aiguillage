@@ -7,7 +7,7 @@
 #include "aiguillage.h"
 #include "train.h"
 
-#define NB_THREAD 2
+#define NB_THREAD 5
 
 int initAiguilleur();
 void *fonc_train(void* p);
@@ -19,11 +19,7 @@ pthread_t pid[NB_THREAD];
 
 int main(int argc, char *argv[])
 {
-    printf("Initialisation...\n");
-    //printf("Geneation de la voie ferroviaire\n");
-
     initAiguillage();
-    printf("Aiguillage pret...\n");
     lancerTrains(NB_THREAD);
 
     return 0;
@@ -36,22 +32,28 @@ int lancerTrains(int nbr)
     for(i=0;i<nbr;i++)
     {
         pthread_create(&pid[i], 0, (void *(*))fonc_train, (void*) i);
+        usleep(TEMPS);
     }
     for(i=0;i<nbr;i++)
     {
         pthread_join(pid[i], NULL);
     }
+    puts("Fin :");
+    printAiguillage();
     return 0;
 }
 
 void *fonc_train(void* p)
 {
     Train train = initTrain((int)p);
+    printf("Création de : ");
     printTrain(&train);
     while(!fini(&train))
     {
         // demande acces au suivant
         demandeAcces(&train);
+        printf("Train %d entre dans %d\n", train.id, train.position);
+        //fflush(stdout);
 
         usleep(TEMPS);
 
@@ -63,7 +65,9 @@ void *fonc_train(void* p)
 
         // libere l'acces du précédent
         libererAcces(&train);
-        printTrain(&train);
+        printf("Train %d sort de %d\n", train.id, train.position-suivant(&train));
+        //fflush(stdout);
+        //printTrain(&train);
     }
     printf("Train %d terminé\n", train.id);
     pthread_exit(0);

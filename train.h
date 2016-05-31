@@ -8,7 +8,7 @@
 
 #include "structures.h"
 
-#define TEMPS 1000000
+#define TEMPS 100000
 
 typedef struct {
     pthread_t id;

@@ -1,5 +1,10 @@
 #include "train.h"
 
+
+// </˳˳_˳˳]-[˳˳_˳˳]-[˳˳_˳˳]
+
+// [˳˳_˳˳]-[˳˳_˳˳]-[˳˳_˳˳\>
+
 int suivant(Train *train)
 {
     if(train->direction == EST)
@@ -11,9 +16,9 @@ int suivant(Train *train)
 int fini(Train *train)
 {
     if(train->direction == EST)
-        return (train->position == POS_LIGNE + suivant(train));
+        return (train->position == POS_EST);
     else
-        return (train->position == POS_GARE + suivant(train));
+        return (train->position == POS_OUEST);
 }
 
 Train initTrain(int i)
@@ -21,7 +26,7 @@ Train initTrain(int i)
     Train train;
     train.id = i;
     train.direction = rand()%2 + 1;
-    train.position = (train.direction-1)*5;
+    train.position = (train.direction==EST?POS_OUEST:POS_EST);
     train.type = 1<<(rand()%3);
     return train;
 }
@@ -33,7 +38,6 @@ void printTrain(Train *train)
         printf("EST\t");
     else
         printf("OUEST\t");
-
     if(train->type == TGV)
         printf("TGV\t");
     else if(train->type == GL)
@@ -44,7 +48,7 @@ void printTrain(Train *train)
     {
         case 0: printf("Pos O\n");break;
         case 1: printf("Garre\n");break;
-        case 2: printf("Garrage\n");break;
+        case 2: printf("Garage\n");break;
         case 3: printf("Tunnel\n");break;
         case 4: printf("Ligne\n");break;
         case 5: printf("Pos E\n");break;
