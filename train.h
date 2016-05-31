@@ -4,13 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "structures.h"
 
-#define TEMPS 100000
+#define TEMPS 1000000
 
 typedef struct {
-    int id;
+    pthread_t id;
     Type type;
     int position;
     Direction direction;
@@ -22,6 +23,8 @@ int suivant(Train *train);
 
 int fini(Train *train);
 
-Train initTrain();
+Train initTrain(int i);
+
+void printTrain(Train *train);
 
 #endif // TRAIN_H_INCLUDED

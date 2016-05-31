@@ -56,12 +56,12 @@ Ligne initLigne();
 
 void initAiguillage();
 
-void demandeAcces(Train* train);
+void acceder(Train* train);
 
-void demandeAccesGare(Train* train);
-void demandeAccesGarrage(Train* train);
-void demandeAccesTunnel(Train* train);
-void demandeAccesLigne(Train* train);
+void accederGare(Train* train);
+void accederGarrage(Train* train);
+void accederTunnel(Train* train);
+void accederLigne(Train* train);
 
 void libererAcces(Train *train);
 
@@ -69,5 +69,7 @@ void libererAccesGare(Train *train);
 void libererAccesGarrage(Train *train);
 void libererAccesTunnel(Train *train);
 void libererAccesLigne(Train *train);
+
+void printAiguillage();
 
 #endif // AIGUILLAGE_H_INCLUDED
