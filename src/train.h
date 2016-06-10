@@ -7,26 +7,26 @@
 #include <pthread.h>
 
 #include "structures.h"
+#include "voie.h"
 
-#define TEMPS 100
+#define TEMPS 10000
 
 typedef struct {
     int id;
-    Type_t type;
-    Direction_t direction;
-    int position;
-    pthread_cond_t condition;
-    // pthread_cont_t condition -> si attente : mettre dans la file + attente
+    Type type;
+    Direction direction;
+    int position; /////
+    Voie_t *voie;
 } Train_t;
 
-Train_t initTrain(int i, Type_t t, Direction_t d);
+Train_t initTrain(int i, Type t, Direction d);
 Train_t initRandTrain(int i);
 
 int suivant(Train_t *train);
 
 void avancer(Train_t* train);
 
-int arrive(Train_t *train);
+bool arrive(Train_t *train);
 
 void printTrain(Train_t *train);
 

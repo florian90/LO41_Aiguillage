@@ -3,15 +3,16 @@ CXX = gcc
 CFLAGS = -Wall #-fpic
 
 #Application-related macros
-SRC = main.c voie.c aiguillage.c train.c list.c
+SRC = main.c voie.c aiguillage.c train.c list.c structures.c
 OBJ = $(SRC:.c=.o)
-HEAD= $(SRC:.c=.o) structures.h
+HEAD= voie.h aiguillage.h train.h list.h structures.h
 TARGET = aiguillage.exe
+ARGS = 1
 
 #Running the program
 run: $(TARGET)
 	@echo "\n Executing the executable " $(TARGET)
-	./$(TARGET)
+	./$(TARGET) $(ARGS)
 
 build: $(TARGET)
 
@@ -21,7 +22,7 @@ $(TARGET): $(OBJ) $(HEAD)
 	$(CXX) $(OBJ) -o $(TARGET) -lpthread
 
 #Generating an object file from a C file having the same name
-%.o: %.c %.h
+%.o: %.c $(HEAD)
 	@echo "\n Generating " $@ " from " $<
 	$(CXX) $(CFLAGS) -c -o $@ $<
 

@@ -5,22 +5,21 @@
 
 // [˳˳_˳˳]-[˳˳_˳˳]-[˳˳_˳˳\>
 
-Train_t initTrain(int i, Type_t t, Direction_t d)
+Train_t initTrain(int i, Type t, Direction d)
 {
     Train_t train;
     train.id = i;
     train.type = t;
     train.direction = d;
     train.position = (train.direction==EST?POS_OUEST:POS_EST);
-    //train.condition = PTHREAD_COND_INITIALIZER;
-    pthread_cond_init(&train.condition, NULL);
+    train.voie = NULL;
     return train;
 }
 
 Train_t initRandTrain(int i)
 {
-    Type_t type = 1<<(rand()%3);
-    Direction_t d = rand()%2 + 1;
+    Type type = 1<<(rand()%3);
+    Direction d = rand()%2 + 1;
     return initTrain(i, type, d);
 }
 
@@ -32,12 +31,12 @@ int suivant(Train_t *train)
         return -1;
 }
 
-int arrive(Train_t *train)
+bool arrive(Train_t *train)
 {
     if(train->direction == EST)
-        return (train->position == POS_EST);
+        return (train->position >= POS_EST);
     else
-        return (train->position == POS_OUEST);
+        return (train->position <= POS_OUEST);
 }
 
 void printTrain(Train_t *train)

@@ -6,9 +6,17 @@
  *      acces : un type de trains ayant accces
  *      capacite un nombre de trains pouvant emprunter la voie en même temps (-1 si infini)
  */
-Voie_t initCapa(Direction_t sens, Type_t acces, int capacite)
+Voie_t initCapa(Direction sens, Type acces, int capacite, bool canStop, Voie_t *(*fnc)(Direction, Type ))
 {
-    Voie_t voie={sens, sens, acces, 0, capacite};
+    Voie_t voie;
+    voie.sens = voie.sensAct = sens;
+    voie.acces = acces;
+    voie.nbAct = 0;
+    voie.nbMax = capacite;
+    voie.canStop = canStop;
+    pthread_cond_init(&voie.condition, NULL);
+    voie.fnNextVoie = fnc;
+    voie.priorite = 0;
     return voie;
 }
 
@@ -17,38 +25,68 @@ Voie_t initCapa(Direction_t sens, Type_t acces, int capacite)
  *      sens : un sens de circulation,
  *      acces : un type de trains ayant accces
  */
-Voie_t initVoie(int sens, int acces)
+Voie_t initVoie(Direction sens, Type acces, bool canStop, Voie_t *(*fnc)(Direction, Type ))
 {
-    return initCapa(sens, acces, -1);
+    return initCapa(sens, acces, -1, canStop, fnc);
+}
+
+bool peutUtiliser(Voie_t *voie, Direction d)
+{
+    return ((voie->sensAct & d) != 0);
 }
 
 /*
- * Retourne vraie si le train peut emprunter la voie, faux sinon
+ * La voie ne pourra plus que foncitonner dans le sens donné
+ * Si la voie ne peut pas être utilisée dans le sens donné,
+ *     retourne false, sinon retourne true
+ * d : Direction : soit EST soit OUEST, pas BIDIRR
  */
-int peutAcceder(Train_t *train, Voie_t *voie)
+bool utiliserVoie(Voie_t *voie, Direction d)
 {
-//La voie peut contenir des trains dans la direction du train
-//      ET (la voie a une capacité infinie OU la capacité maximale n'est pas atteinte)
-    return (voie->sens&train->direction) && (voie->nbMax == -1 || voie->nbAct < voie->nbMax);
-}
-
-/*
- * Ajoute un train sur une voie
- * La voie ne peut plus être utilisée dans la direction opposée au train
- */
-void utiliserVoie(Train_t *train, Voie_t *voie)
-{
+    // Si voie peut fonctionner dans la direction donnée :
+    if((voie->sens & d) != 0)
+    {
+        // La voie n'est autorisée plus que dans cette direction
+        voie->sensAct &= d;
+    }
+    // Augmente le nombre de personnes sur la voie
     voie->nbAct++;
-    voie->sensAct = train->direction;
+    // Si la voie est sur utilisée :
+    // if(voie->nbMax != -1 && voie->nbAct < voie->nbMax)
+    //     return false;
+
+    // Retourne vraie si la voie peut être utilisée dans le sens direction
+    // Faux sinon
+    return peutUtiliser(voie, d);
 }
 
 /*
- * Retire un train sur une voie
- * Si la voie est vide, elle peut de nouveau être
- *   utilisée dans tous les sens prévus initaliement
+ * La voie peut à nouveau fonctionner dans toutes les directions initalement prévus
  */
-void libererVoie(Train_t *train, Voie_t *voie)
+void libererVoie(Voie_t *voie)
 {
-    if(--voie->nbAct == 0)
+    // NULL si sur case départ
+    if(voie != NULL && --voie->nbAct == 0)
         voie->sensAct = voie->sens;
+}
+
+bool canStop(Voie_t *voie)
+{
+    if(voie == NULL)
+        return false; ///////::
+    return voie->canStop;
+}
+
+void setPrio(Voie_t *voie, Type t)
+{
+    int p = getPriorite(t);
+    if(voie->priorite == 0)
+        voie->priorite = p;
+    else if(voie->priorite > p)
+        voie->priorite = p;
+}
+
+void resetPriorite(Voie_t *voie)
+{
+    voie->priorite = 0;
 }

@@ -12,23 +12,24 @@
 #define VAL_M   (1<<2)
 #define VAL_TOT (VAL_TGV | VAL_GL | VAL_M)
 
-#define POS_GARE    1
-#define POS_GARAGE (POS_GARE+1)
+#define POS_OUEST   (0)
+#define POS_GARE    (POS_OUEST+1)
+#define POS_GARAGE  (POS_GARE+1)
 #define POS_TUNNEL  (POS_GARAGE+1)
 #define POS_LIGNE   (POS_TUNNEL+1)
-
-#define POS_OUEST POS_GARAGE
-#define POS_EST   (POS_LIGNE+1)
+#define POS_EST     (POS_LIGNE+1)
 
 typedef enum {
     TGV = VAL_TGV,
     GL  = VAL_GL,
     M   = VAL_M
-}Type_t;
+}Type;
 
 typedef enum {
     est = EST,
     ouest = OUEST
-}Direction_t;
+}Direction;
+
+int getPriorite(Type t);
 
 #endif // STRUCTURES_H_INCLUDED

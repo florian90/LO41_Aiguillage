@@ -35,15 +35,24 @@ typedef struct {
 }Ligne_t;
 
 typedef struct {
+    Voie_t voieEst;
+    Voie_t voieOuest;
+} Sortie_t;
+
+typedef struct {
+    Sortie_t ouest;
     Gare_t gare;
     Garage_t garage;
     Tunnel_t tunnel;
     Ligne_t ligne;
-    List_t listTGV;
-    List_t listGL;
-    List_t listM;
+    Voie_t voieEst;
+    Sortie_t est;
+
     int update;
 }Aiguillage_t;
+
+
+Train_t initTrainAiguillage(int no);
 
 Gare_t initGare();
 Garage_t initGarage();
@@ -52,27 +61,26 @@ Ligne_t initLigne();
 
 void *initAiguillage(void *p);
 
+void liberePriorite(int priorite);
+
 int avance(Train_t *train);
 
-// void acceder(Train_t* train);
-
-void demandeAcces(Train_t *train);
-void addToWaitList(Train_t *train);
-void accederGare(Train_t* train);
-void accederGarage(Train_t* train);
-void accederTunnel(Train_t* train);
-void accederLigne(Train_t* train);
-
-void signalTrains();
-int signalTrainList(List_t *list);
-void signalTrain(Train_t *train);
-
-void libererAcces(Train_t *train);
-void libererAccesGare(Train_t *train);
-void libererAccesGarage(Train_t *train);
-void libererAccesTunnel(Train_t *train);
-void libererAccesLigne(Train_t *train);
-
 void printAiguillage();
+
+Voie_t *nextNull(Direction d, Type t);
+Voie_t *nextVoieOuest(Direction d, Type t);
+Voie_t *nextVoieGareA(Direction d, Type t);
+Voie_t *nextVoieGareC(Direction d, Type t);
+Voie_t *nextVoieGarageTGV(Direction d, Type t);
+Voie_t *nextVoieGarageGL(Direction d, Type t);
+Voie_t *nextVoieGarageMO(Direction d, Type t);
+Voie_t *nextVoieGarageME(Direction d, Type t);
+Voie_t *nextVoieTunnel(Direction d, Type t);
+Voie_t *nextVoieLigne(Direction d, Type t);
+Voie_t *nextVoieEst(Direction d, Type t);
+
+Voie_t *nextVoie(Train_t *train);
+
+void dort(int i);
 
 #endif // AIGUILLAGE_H_INCLUDED
