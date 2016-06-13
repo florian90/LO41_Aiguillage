@@ -7,7 +7,7 @@ SRC = main.c voie.c aiguillage.c train.c list.c structures.c
 OBJ = $(SRC:.c=.o)
 HEAD= voie.h aiguillage.h train.h list.h structures.h
 TARGET = aiguillage.exe
-ARGS = 1
+ARGS = 
 
 #Running the program
 run: $(TARGET)

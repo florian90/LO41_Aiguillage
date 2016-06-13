@@ -9,9 +9,14 @@
 #include "aiguillage.h"
 
 void lancerAiguillage();
-void *fonc_train(int *p);
+void *fonc_train(void *p);
 int lancerTrains();
 void erreur(const char *str, int lvl);
+
+pthread_mutex_t mutexEcriture = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexAiguillagePret = PTHREAD_MUTEX_INITIALIZER;
+
+pthread_cond_t condAiguillagePret = PTHREAD_COND_INITIALIZER;
 
 pthread_t pidAiguilleur;
 
@@ -20,58 +25,55 @@ Train_t trains[NB_THREAD];
 
 int main(int argc, char *argv[])
 {
-    if(argc >=2)
-        srand(atoi(argv[1]));
-    else
-    srand(time(NULL));
-    lancerAiguillage();
-    usleep(100);
-    lancerTrains(NB_THREAD);
-    return 0;
+	if(argc >=2)
+		srand(atoi(argv[1]));
+	else
+	srand(time(NULL));
+	lancerAiguillage();
+
+	lancerTrains(NB_THREAD);
+	return 0;
 }
 
 void lancerAiguillage()
 {
-    pthread_create(&pidAiguilleur, 0, (void *(*)(void *))initAiguillage, (void *) NULL);
+	pthread_create(&pidAiguilleur, 0, (void *(*)(void *))initAiguillage, (void *) NULL);
 }
 
 int lancerTrains(long nbr)
 {
-    long i;
-    for(i=0;i<nbr;i++)
-    {
-        pthread_create(&pidTrains[i], 0, (void *(*)(void *))fonc_train, (void*) &i);
-        //usleep(TEMPS);
-    }
-    for(i=0;i<nbr;i++)
-    {
-        pthread_join(pidTrains[i], NULL);
-    }
-    puts("Fin :");
-    printAiguillage();
-    return 0;
+	pthread_cond_wait(&condAiguillagePret, &mutexAiguillagePret);
+	long i;
+	for(i=0;i<nbr;i++)
+	{
+		pthread_create(&pidTrains[i], 0, (void *(*)(void *))fonc_train, (void*) i);
+		//usleep(TEMPS);
+	}
+	for(i=0;i<nbr;i++)
+	{
+		pthread_join(pidTrains[i], NULL);
+	}
+	return 0;
 }
 
-void *fonc_train(int* p)
+void *fonc_train(void *p)
 {
-    Train_t train = initTrainAiguillage(*p);
-    //printf("Création de : ");
-    printTrain(&train);
-    while(!arrive(&train))
-    {
-        if(avance(&train) != 0)
-        {
-            //bloquerTrain
-            printf("BLOQUE\n");
-            exit(1);
-        }
-    }
-    printf("Train_t %d terminé\n", train.id);
-    pthread_exit(0);
+	int idx = (int) p;
+	trains[idx] = initTrainAiguillage(idx);
+	while(!arrive(&trains[idx]))
+	{
+		if(avance(&trains[idx]) != 0)
+		{
+			//bloquerTrain
+			safePuts("BLOQUE\n");
+			exit(1);
+		}
+	}
+	pthread_exit(0);
 }
 
 void erreur(const char *str, int lvl)
 {
-    perror(str);
-    exit(lvl);
+	perror(str);
+	exit(lvl);
 }

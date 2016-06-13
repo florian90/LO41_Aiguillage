@@ -9,14 +9,12 @@
 #include "structures.h"
 #include "voie.h"
 
-#define TEMPS 10000
-
 typedef struct {
-    int id;
-    Type type;
-    Direction direction;
-    int position; /////
-    Voie_t *voie;
+	int id;
+	Type type;
+	Direction direction;
+	int position;
+	bool dort;
 } Train_t;
 
 Train_t initTrain(int i, Type t, Direction d);
