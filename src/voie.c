@@ -1,7 +1,7 @@
 #include "voie.h"
 
 
-void _initVoie(Voie_t *voie, Direction sens, Type acces, int capacite, bool canStop, void (*funcLiberer)(Type t))
+void _initVoie(Voie_t *voie, Direction sens, Type acces, int capacite, bool canStop, int (*funcLiberer)(Type t))
 {
 	int i;
 	voie->sens = voie->sensAct = sens;
@@ -98,6 +98,35 @@ void retirerAttente(Voie_t *voie, Type t)
 bool enAttente(Voie_t *voie, Type t)
 {
 	return (voie->nbAttente[numTabType(t)] != 0);
+}
+
+bool supEnAttente(Voie_t *voie, Type t)
+{
+	switch (t) {
+		case M	:
+			if(enAttente(voie, GL))
+				return true;
+		case GL	:
+			if(enAttente(voie, TGV))
+				return true;
+	}
+	return false;
+}
+
+/*
+ * Retourne vraie si il y a un train en attente
+ *   dans la direction oppsée et qu'il a une priorité
+ *   suppérieur à t
+*/
+bool supEnAttenteOppose(Voie_t *voie, Type t, Direction sens)
+{
+	if(sens == EST)
+	{
+		return voie->sensAct == OUEST && supEnAttente(voie, t);
+	}
+	// OUEST :
+	return voie->sensAct == EST && supEnAttente(voie, t);
+
 }
 
 int numTabType(Type t)

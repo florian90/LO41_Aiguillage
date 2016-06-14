@@ -6,11 +6,11 @@
 
 #define ESPACE 20
 
-#define NB_THREAD 10
+#define NB_THREAD 5
 
 #define NBR_STOCK -1
 
-#define TEMPS 500000
+#define TEMPS 2000000
 
 #define EST     (1<<0)
 #define OUEST   (1<<1)

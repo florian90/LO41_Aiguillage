@@ -10,15 +10,15 @@ Aiguillage_t aiguillage;
 #define NBR_TRAINS_INIT 10
 Train_t trainsInit[10] = {
 	{0, TGV	, OUEST	},
-	{1, M	, OUEST	},
+	{1, M	, EST	},
 	{2, GL	, OUEST },
 	{3, TGV	, OUEST },
 	{4, M	, OUEST },
-	{5, TGV	, OUEST },
+	{5, TGV	, EST },
 	{6, GL	, OUEST },
 	{7, TGV	, OUEST },
-	{8, M	, OUEST },
-	{9, TGV	, OUEST },
+	{8, M	, EST },
+	{9, TGV	, EST },
 };
 
 Train_t initTrainAiguillage(int no)
@@ -89,8 +89,6 @@ void initEst()
 */
 void *initAiguillage(void *p)
 {
-	int res;
-	Type t;
 	initOuest();
 	initGare();
 	initGarage();
@@ -102,27 +100,18 @@ void *initAiguillage(void *p)
 	// Signal que l'aiguillage est prêt à recevoir les trains
 	pthread_cond_signal(&condAiguillagePret);
 
+	Type t;
 	t = TGV;
 	while(1)
 	{
 		//dort(500000);
-		res = liberePriorite(t);
-		if(res == -1)
-		{
-			//safePuts("RESTART\n");
-			aiguillage.update = 0;
+		liberePriorite(t);
+		if(t == TGV)
+			t = GL;
+		else if(t == GL)
+			t = M;
+		else
 			t = TGV;
-			printAiguillage();
-		}
-		else if(res == 0)
-		{
-			if(t == TGV)
-				t = GL;
-			else if(t == GL)
-				t = M;
-			else
-				t = TGV;
-		}
 	}
 	return NULL;
 }
@@ -144,22 +133,15 @@ Voie_t *voieArret[8] = {
 */
 int liberePriorite(Type t)
 {
-	int i, res;
+	int i;
 	for(i=0;i<NB_VOIE_STOP;i++)
 	{
-		if(aiguillage.update)
-		{
-			return -1;
-		}
-		if((voieArret[i]->funcLiberer)(t) == 1)
-		{
-			return 1;
-		}
+		(voieArret[i]->funcLiberer)(t);
 	}
 	return 0;
 }
 
-// Libération générale : 
+// Libération générale :
 // Bloque la voie
 // if(trains de ce type en attente)
 // {
@@ -172,7 +154,7 @@ int liberePriorite(Type t)
 // 			Retire le train en attente
 // 			libère le train
 // 		}
-// 		Débloque les mutex 
+// 		Débloque les mutex
 // 	}
 // }
 // débloque la voie
@@ -183,13 +165,14 @@ int libererOuest(Type t)
 	Voie_t *voie = &aiguillage.ouest.voieEst;
 	// Bloque le mlutex de la voie actuelle ??
 	pthread_mutex_lock(&voie->mutex);
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		// Séparer les cas en fonction du sens et du type du train
 		if(t == M)
 		{
 			pthread_mutex_lock(&aiguillage.gare.voieA.mutex);
-			if(peutAjouterTrain(&aiguillage.gare.voieA, EST))
+			if(peutAjouterTrain(&aiguillage.gare.voieA, EST)
+			&& !supEnAttenteOppose(&aiguillage.gare.voieA, t, EST))
 			{
 				utiliserVoie(&aiguillage.gare.voieA, EST);
 				retirerAttente(voie, t);
@@ -201,7 +184,8 @@ int libererOuest(Type t)
 		else
 		{
 			pthread_mutex_lock(&aiguillage.gare.voieC.mutex);
-			if(peutAjouterTrain(&aiguillage.gare.voieC, EST))
+			if(peutAjouterTrain(&aiguillage.gare.voieC, EST)
+			&& !supEnAttenteOppose(&aiguillage.gare.voieC, t, EST))
 			{
 				utiliserVoie(&aiguillage.gare.voieC, EST);
 				retirerAttente(voie, t);
@@ -221,11 +205,12 @@ int libererGareA(Type t)
 	Voie_t *voie = &aiguillage.gare.voieA;
 	// Si il y a des trains de ce type en attente sur la voie
 	pthread_mutex_lock(&voie->mutex);
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		// Bloque le mutex de toutes les voies à réserver
 		pthread_mutex_lock(&aiguillage.garage.voieME.mutex);
-		if(peutAjouterTrain(&aiguillage.garage.voieME, EST))
+		if(peutAjouterTrain(&aiguillage.garage.voieME, EST)
+		&& !supEnAttenteOppose(&aiguillage.garage.voieME, t, EST))
 		{
 			// Réserve toutes les voies nécessaires
 			utiliserVoie(&aiguillage.garage.voieME, EST);
@@ -248,13 +233,14 @@ int libererGareC(Type t)
 	Voie_t *voie = &aiguillage.gare.voieC;
 	pthread_mutex_lock(&voie->mutex);
 	// Si il y a des trains de ce type en attente sur la voie
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		if(t == TGV)
 		{
 			// Bloque le mutex de toutes les voies à réserver
 			pthread_mutex_lock(&aiguillage.garage.voieTGV.mutex);
-			if(peutAjouterTrain(&aiguillage.garage.voieTGV, EST))
+			if(peutAjouterTrain(&aiguillage.garage.voieTGV, EST)
+			&& !supEnAttenteOppose(&aiguillage.garage.voieTGV, t, EST))
 			{
 				// Réserve toutes les voies nécessaires
 				utiliserVoie(&aiguillage.garage.voieTGV, EST);
@@ -271,7 +257,8 @@ int libererGareC(Type t)
 		{
 			// Bloque le mutex de toutes les voies à réserver
 			pthread_mutex_lock(&aiguillage.garage.voieGL.mutex);
-			if(peutAjouterTrain(&aiguillage.garage.voieGL, EST))
+			if(peutAjouterTrain(&aiguillage.garage.voieGL, EST)
+			&& !supEnAttenteOppose(&aiguillage.garage.voieGL, t, EST))
 			{
 				// Réserve toutes les voies nécessaires
 				utiliserVoie(&aiguillage.garage.voieGL, EST);
@@ -284,7 +271,6 @@ int libererGareC(Type t)
 			// Libère tous les mutex bloqués
 			pthread_mutex_unlock(&aiguillage.garage.voieGL.mutex);
 		}
-
 	}
 	pthread_mutex_unlock(&voie->mutex);
 	return res;
@@ -296,7 +282,7 @@ int libererGarageTGV(Type t)
 	Voie_t *voie = &aiguillage.garage.voieTGV;
 	pthread_mutex_lock(&voie->mutex);
 	// Si il y a des trains de ce type en attente sur la voie
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		if(voie->sensAct == EST)
 		{
@@ -304,8 +290,11 @@ int libererGarageTGV(Type t)
 			pthread_mutex_lock(&aiguillage.tunnel.voie.mutex);
 			pthread_mutex_lock(&aiguillage.ligne.voie.mutex);
 			pthread_mutex_lock(&aiguillage.est.voieOuest.mutex);
-			if(peutAjouterTrain(&aiguillage.tunnel.voie, EST) && peutAjouterTrain(&aiguillage.ligne.voie, EST) && peutAjouterTrain(&aiguillage.est.voieEst, EST))
-			{	
+			if(peutAjouterTrain(&aiguillage.tunnel.voie, EST)
+			&& peutAjouterTrain(&aiguillage.ligne.voie, EST)
+			&& peutAjouterTrain(&aiguillage.est.voieEst, EST)
+			&& !supEnAttenteOppose(&aiguillage.est.voieEst, t, EST))
+			{
 				// Réserve toutes les voies nécessaires
 				utiliserVoie(&aiguillage.tunnel.voie, EST);
 				utiliserVoie(&aiguillage.ligne.voie, EST);
@@ -325,7 +314,8 @@ int libererGarageTGV(Type t)
 		{
 			// Bloque le mutex de toutes les voies à réserver
 			pthread_mutex_lock(&aiguillage.gare.voieD.mutex);
-			if(peutAjouterTrain(&aiguillage.gare.voieD,  OUEST))
+			if(peutAjouterTrain(&aiguillage.gare.voieD,  OUEST)
+			&& !supEnAttenteOppose(&aiguillage.gare.voieD, t, OUEST))
 			{
 				// Réserve toutes les voies nécessaires
 				utiliserVoie(&aiguillage.gare.voieD, OUEST);
@@ -349,11 +339,12 @@ int libererGarageMO(Type t)
 	Voie_t *voie = &aiguillage.garage.voieMO;
 	pthread_mutex_lock(&voie->mutex);
 	// Si il y a des trains de ce type en attente sur la voie
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		// Bloque le mutex de toutes les voies à réserver
 		pthread_mutex_lock(&aiguillage.gare.voieB.mutex);
-		if(peutAjouterTrain(&aiguillage.gare.voieB,  OUEST))
+		if(peutAjouterTrain(&aiguillage.gare.voieB,  OUEST)
+		&& !supEnAttenteOppose(&aiguillage.gare.voieB, t, OUEST))
 		{
 			// Réserve toutes les voies nécessaires
 			utiliserVoie(&aiguillage.gare.voieB, OUEST);
@@ -366,7 +357,7 @@ int libererGarageMO(Type t)
 		// Libère tous les mutex bloqués
 		pthread_mutex_unlock(&aiguillage.gare.voieB.mutex);
 	}
-	pthread_mutex_unlock(&voie->mutex);	
+	pthread_mutex_unlock(&voie->mutex);
 	return res;
 }
 
@@ -376,13 +367,16 @@ int libererGarageME(Type t)
 	Voie_t *voie = &aiguillage.garage.voieME;
 	pthread_mutex_lock(&voie->mutex);
 	// Si il y a des trains de ce type en attente sur la voie
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		// Bloque le mutex de toutes les voies à réserver
 		pthread_mutex_lock(&aiguillage.tunnel.voie.mutex);
 		pthread_mutex_lock(&aiguillage.ligne.voie.mutex);
 		pthread_mutex_lock(&aiguillage.est.voieOuest.mutex);
-		if(peutAjouterTrain(&aiguillage.tunnel.voie, EST) && peutAjouterTrain(&aiguillage.ligne.voie, EST) && peutAjouterTrain(&aiguillage.est.voieEst, EST))
+		if(peutAjouterTrain(&aiguillage.tunnel.voie, EST)
+		&& peutAjouterTrain(&aiguillage.ligne.voie, EST)
+		&& peutAjouterTrain(&aiguillage.est.voieEst, EST)
+		&& !supEnAttenteOppose(&aiguillage.est.voieEst, t, EST))
 		{
 			// Réserve toutes les voies nécessaires
 			utiliserVoie(&aiguillage.tunnel.voie, EST);
@@ -409,7 +403,7 @@ int libererGarageGL(Type t)
 	Voie_t *voie = &aiguillage.garage.voieGL;
 	pthread_mutex_lock(&voie->mutex);
 	// Si il y a des trains de ce type en attente sur la voie
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		if(voie->sensAct == EST)
 		{
@@ -417,7 +411,10 @@ int libererGarageGL(Type t)
 			pthread_mutex_lock(&aiguillage.tunnel.voie.mutex);
 			pthread_mutex_lock(&aiguillage.ligne.voie.mutex);
 			pthread_mutex_lock(&aiguillage.est.voieOuest.mutex);
-			if(peutAjouterTrain(&aiguillage.tunnel.voie, EST) && peutAjouterTrain(&aiguillage.ligne.voie, EST) && peutAjouterTrain(&aiguillage.est.voieEst, EST))
+			if(peutAjouterTrain(&aiguillage.tunnel.voie, EST)
+			&& peutAjouterTrain(&aiguillage.ligne.voie, EST)
+			&& peutAjouterTrain(&aiguillage.est.voieEst, EST)
+			&& !supEnAttenteOppose(&aiguillage.est.voieEst, t, EST))
 			{
 				// Réserve toutes les voies nécessaires
 				utiliserVoie(&aiguillage.tunnel.voie, EST);
@@ -438,7 +435,8 @@ int libererGarageGL(Type t)
 		{
 			// Bloque le mutex de toutes les voies à réserver
 			pthread_mutex_lock(&aiguillage.gare.voieD.mutex);
-			if(peutAjouterTrain(&aiguillage.gare.voieD,  OUEST))
+			if(peutAjouterTrain(&aiguillage.gare.voieD,  OUEST)
+			&& !supEnAttenteOppose(&aiguillage.gare.voieD, t, OUEST))
 			{
 				// Réserve toutes les voies nécessaires
 				utiliserVoie(&aiguillage.gare.voieD, OUEST);
@@ -462,7 +460,7 @@ int libererEst(Type t)
 	Voie_t *voie = &aiguillage.est.voieOuest;
 	// Bloque le mlutex de la voie actuelle ??
 	pthread_mutex_lock(&voie->mutex);
-	if(enAttente(voie, t))
+	if(enAttente(voie, t) && !supEnAttente(voie, t))
 	{
 		Voie_t *voieGarage;
 		if(t == TGV)
@@ -481,7 +479,10 @@ int libererEst(Type t)
 		pthread_mutex_lock(&aiguillage.ligne.voie.mutex);
 		pthread_mutex_lock(&aiguillage.tunnel.voie.mutex);
 		pthread_mutex_lock(&voieGarage->mutex);
-		if(peutAjouterTrain(&aiguillage.ligne.voie, OUEST) && peutAjouterTrain(&aiguillage.tunnel.voie, OUEST) && peutAjouterTrain(voieGarage, OUEST))
+		if(peutAjouterTrain(&aiguillage.ligne.voie, OUEST)
+		&& peutAjouterTrain(&aiguillage.tunnel.voie, OUEST)
+		&& peutAjouterTrain(voieGarage, OUEST)
+		&& !supEnAttenteOppose(voieGarage, t, OUEST))
 		{
 			utiliserVoie(&aiguillage.ligne.voie, OUEST);
 			utiliserVoie(&aiguillage.tunnel.voie, OUEST);
@@ -493,7 +494,7 @@ int libererEst(Type t)
 		pthread_mutex_unlock(&aiguillage.ligne.voie.mutex);
 		pthread_mutex_unlock(&aiguillage.tunnel.voie.mutex);
 		pthread_mutex_unlock(&voieGarage->mutex);
-		
+
 	}
 	pthread_mutex_unlock(&voie->mutex);
 	return res;
@@ -634,8 +635,8 @@ void printAiguillage()
 {
 	pthread_mutex_lock(&mutexEcriture);
 	fflush(stdout);
-	printf("\033[2J");
-	printf("\033[1;1H");
+	// printf("\033[2J");
+	// printf("\033[1;1H");
 	int i, pos, nb=1, nbMax = 0, p0;
 	p0 = 0;
 	for(pos = p0; pos <= POS_EST; pos++)
