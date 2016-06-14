@@ -6,7 +6,7 @@
 
 #define ESPACE 20
 
-#define NB_THREAD 2
+#define NB_THREAD 10
 
 #define NBR_STOCK -1
 

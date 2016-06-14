@@ -50,6 +50,11 @@ bool peutUtiliser(Voie_t *voie, Direction d)
 	return ((voie->sensAct & d) != 0) && (voie->nbMax == -1 || voie->nbAct <= voie->nbMax);
 }
 
+bool peutAjouterTrain(Voie_t *voie, Direction d)
+{
+	return ((voie->sensAct & d) != 0) && (voie->nbMax == -1 || voie->nbAct < voie->nbMax);
+}
+
 /*
  * La voie ne pourra plus que foncitonner dans le sens donné
  * Si la voie ne peut pas être utilisée dans le sens donné,
