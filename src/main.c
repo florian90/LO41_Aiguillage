@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 	if(argc >=2)
 		srand(atoi(argv[1]));
 	else
-	srand(time(NULL));
+		srand(time(NULL));
 	lancerAiguillage();
 
 	lancerTrains(NB_THREAD);
@@ -42,8 +42,9 @@ void lancerAiguillage()
 
 int lancerTrains(long nbr)
 {
-	pthread_cond_wait(&condAiguillagePret, &mutexAiguillagePret);
 	long i;
+	pthread_cond_wait(&condAiguillagePret, &mutexAiguillagePret);
+
 	for(i=0;i<nbr;i++)
 	{
 		pthread_create(&pidTrains[i], 0, (void *(*)(void *))fonc_train, (void*) i);

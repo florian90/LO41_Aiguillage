@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "train.h"
 #include "structures.h"
@@ -58,14 +59,16 @@ typedef struct {
 
 Train_t initTrainAiguillage(int no);
 
-Gare_t initGare();
-Garage_t initGarage();
-Tunnel_t initTunnel();
-Ligne_t initLigne();
+void initEst();
+void initGare();
+void initGarage();
+void initTunnel();
+void initLigne();
+void initOuest();
 
 void *initAiguillage(void *p);
 
-int liberePriorite(int priorite);
+int liberePriorite(Type t);
 
 int avance(Train_t *train);
 
@@ -77,16 +80,13 @@ Voie_t *nextVoie(Train_t *train);
 
 void dort(int i);
 
-void libere(Voie_t *voie);
-
-
-int libererOuest(int priorite);
-int libererGareA(int priorite);
-int libererGareB(int priorite);
-int libererGarageTGV(int priorite);
-int libererGarageMO(int priorite);
-int libererGarageME(int priorite);
-int libererGarageGL(int priorite);
-int libererEst(int priorite);
+int libererOuest(Type t);
+int libererGareA(Type t);
+int libererGareC(Type t);
+int libererGarageTGV(Type t);
+int libererGarageMO(Type t);
+int libererGarageME(Type t);
+int libererGarageGL(Type t);
+int libererEst(Type t);
 
 #endif // AIGUILLAGE_H_INCLUDED

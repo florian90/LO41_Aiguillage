@@ -6,7 +6,7 @@
 
 #define ESPACE 20
 
-#define NB_THREAD 5
+#define NB_THREAD 2
 
 #define NBR_STOCK -1
 
@@ -19,7 +19,7 @@
 #define TGV (1<<0)
 #define GL  (1<<1)
 #define M   (1<<2)
-#define TYPE_TOT (VAL_TGV | VAL_GL | VAL_M)
+#define VAL_TOT (TGV | GL | M)
 
 #define POS_OUEST   (0)
 #define POS_GARE    (POS_OUEST+1)

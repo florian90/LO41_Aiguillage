@@ -1,6 +1,6 @@
 #my general makefile template
 CXX = gcc
-CFLAGS = -Wall #-fpic
+CFLAGS = -Wall #-pedantic
 
 #Application-related macros
 SRC = main.c voie.c aiguillage.c train.c list.c structures.c
