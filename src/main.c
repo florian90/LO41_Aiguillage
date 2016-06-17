@@ -19,16 +19,15 @@ pthread_mutex_t mutexAiguillagePret = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t condAiguillagePret = PTHREAD_COND_INITIALIZER;
 
 pthread_t pidAiguilleur;
-
+pthread_t pid_affichage;
 pthread_t pidTrains[NB_THREAD];
+
 Train_t trains[NB_THREAD];
 
 int main(int argc, char *argv[])
 {
-	if(argc >=2)
-		srand(atoi(argv[1]));
-	else
-		srand(time(NULL));
+	srand(time(NULL));
+
 	lancerAiguillage();
 
 	lancerTrains(NB_THREAD);
@@ -38,12 +37,13 @@ int main(int argc, char *argv[])
 void lancerAiguillage()
 {
 	pthread_create(&pidAiguilleur, 0, (void *(*)(void *))initAiguillage, (void *) NULL);
+	pthread_cond_wait(&condAiguillagePret, &mutexAiguillagePret);
+	pthread_create(&pid_affichage, 0, (void *(*)(void *))affichage, (void *) NULL);
 }
 
 int lancerTrains(long nbr)
 {
 	long i;
-	pthread_cond_wait(&condAiguillagePret, &mutexAiguillagePret);
 
 	for(i=0;i<nbr;i++)
 	{
@@ -66,7 +66,6 @@ void *fonc_train(void *p)
 		if(avance(&trains[idx]) != 0)
 		{
 			//bloquerTrain
-			safePuts("BLOQUE\n");
 			exit(1);
 		}
 	}

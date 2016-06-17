@@ -1,7 +1,7 @@
 #include "voie.h"
 
 
-void _initVoie(Voie_t *voie, Direction sens, Type acces, int capacite, bool canStop, int (*funcLiberer)(Type t))
+void _initVoie(Voie_t *voie, Direction sens, Type acces, int capacite, bool canStop, void (*funcLiberer)(Type t))
 {
 	int i;
 	voie->sens = voie->sensAct = sens;
@@ -40,7 +40,14 @@ void initVoie(Voie_t *voie, Direction sens, Type acces)
 	initCapa(voie, sens, acces, -1);
 }
 
-void initArret(Voie_t *voie, Direction sens, Type acces, int capacite, int (*funcLiberer)(Type t))
+/*
+ * Crée une nouvelle voie sur laquelle on peut s'arreter avec :
+ *      sens : un sens de circulation,
+ *      acces : un type de trains ayant accces
+ *      capacite : un nombre de trains pouvant emprunter la voie en même temps (-1 si infini)
+ *		funcLiberer : Une fonction permettant de libérer un train de la voie si les conditions le permettent
+*/
+void initArret(Voie_t *voie, Direction sens, Type acces, int capacite, void (*funcLiberer)(Type t))
 {
 	_initVoie(voie, sens, acces, capacite, true, funcLiberer);
 }
@@ -63,19 +70,19 @@ bool peutAjouterTrain(Voie_t *voie, Direction d)
 */
 void utiliserVoie(Voie_t *voie, Direction d)
 {
-    // La voie n'est autorisée plus que dans cette direction
+    // La voie n'est disponible plus que dans cette direction
 	voie->sensAct &= d;
 
-    // Augmente le nombre de personnes sur la voie
+    // Augmente le nombre de trains sur la voie
 	voie->nbAct++;
 }
 
 /*
- * La voie peut à nouveau fonctionner dans toutes les directions initalement prévus
+ * Retire un train de la voie, libère le sens si il n'y a plus de trains dessus
 */
 void libererVoie(Voie_t *voie)
 {
-// NULL si sur case départ
+	// NULL si sur case départ
 	if(--voie->nbAct == 0)
 		voie->sensAct = voie->sens;
 }
@@ -100,6 +107,9 @@ bool enAttente(Voie_t *voie, Type t)
 	return (voie->nbAttente[numTabType(t)] != 0);
 }
 
+/*
+ * Retourne vraie si un train avec une priorité suppéreure est en attente
+*/
 bool supEnAttente(Voie_t *voie, Type t)
 {
 	switch (t) {
@@ -114,21 +124,19 @@ bool supEnAttente(Voie_t *voie, Type t)
 }
 
 /*
- * Retourne vraie si il y a un train en attente
- *   dans la direction oppsée et qu'il a une priorité
- *   suppérieur à t
+ * Retourne vraie si  :
+ *	le type t est prioritaire sur les trains de la voie
+ * 	et que les trains de la voie attendent dans la direction sens
 */
-bool supEnAttenteOppose(Voie_t *voie, Type t, Direction sens)
+bool estPrioritaireSur(Type t, Voie_t *voie, Direction sens)
 {
-	if(sens == EST)
-	{
-		return voie->sensAct == OUEST && supEnAttente(voie, t);
-	}
-	// OUEST :
-	return voie->sensAct == EST && supEnAttente(voie, t);
-
+	return !supEnAttente(voie, t) || (voie->sensAct == sens);
 }
 
+/*
+ * Retourne l'indice du tableau pour les conditions 
+ * 	et le nombre de trains en attenteen fonction du type
+*/
 int numTabType(Type t)
 {
 	switch (t) {

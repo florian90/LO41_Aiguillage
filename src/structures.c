@@ -13,14 +13,6 @@ int getPriorite(Type t)
 		return 3;
 }
 
-void safePuts(char *str)
-{
-	pthread_mutex_lock(&mutexEcriture);
-	printf("%s", str);
-	fflush(stdout);
-	pthread_mutex_unlock(&mutexEcriture);
-}
-
 void printPos(int pos)
 {
 	 switch(pos)
@@ -32,4 +24,16 @@ void printPos(int pos)
 		case POS_LIGNE: 	printf("LIGNE\n");	break;
 		case POS_EST: 		printf("EST\n");	break;
 	}
+}
+
+/*
+ * Dort i millisecondes
+*/
+void dort(int i)
+{
+	long j = 1000*(long) i;
+	struct timespec t;
+	t.tv_sec  = j/1000000000L;
+	t.tv_nsec = j%1000000000L;
+	nanosleep(&t, NULL);
 }

@@ -1,10 +1,5 @@
 #include "train.h"
 
-
-// </˳˳_˳˳]-[˳˳_˳˳]-[˳˳_˳˳]
-
-// [˳˳_˳˳]-[˳˳_˳˳]-[˳˳_˳˳\>
-
 Train_t initTrain(int i, Type t, Direction d)
 {
 	Train_t train;
@@ -41,9 +36,10 @@ bool arrive(Train_t *train)
 
 void printTrain(Train_t *train)
 {
-	if(arrive(train))
-		return;
-
+	if(train->dort)
+		printf("\033[31m");
+	else
+		printf("\033[32m");
 	if(train->direction == EST)
 	{
 		printf("[˳");
@@ -67,5 +63,5 @@ void printTrain(Train_t *train)
 		}
 		printf("˳]");
 	}
-	printf("\n");
+	printf("\033[0m\n");
 }

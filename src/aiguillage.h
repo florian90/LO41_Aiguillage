@@ -5,11 +5,12 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <time.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "train.h"
 #include "structures.h"
 #include "voie.h"
-#include "list.h"
 
 extern pthread_mutex_t mutexEcriture;
 extern pthread_mutex_t mutexAiguillagePret;
@@ -17,6 +18,8 @@ extern pthread_mutex_t mutexAiguillagePret;
 extern pthread_cond_t condAiguillagePret;
 
 extern Train_t trains[NB_THREAD];
+
+/*	Structures des parties de l'aiguillage 	*/
 
 typedef struct {
 	Voie_t voieA;
@@ -53,10 +56,11 @@ typedef struct {
 	Ligne_t ligne;
 	Voie_t voieEst;
 	Sortie_t est;
-
-	volatile int update;
 }Aiguillage_t;
 
+/*
+ * Initialise un nouveau train d'id no
+*/
 Train_t initTrainAiguillage(int no);
 
 void initEst();
@@ -65,28 +69,27 @@ void initGarage();
 void initTunnel();
 void initLigne();
 void initOuest();
-
 void *initAiguillage(void *p);
 
-int liberePriorite(Type t);
+void *affichage(void *p);
 
-int avance(Train_t *train);
-
-void printAiguillage();
+// Fonctions de libération sur les voies
+void libererOuest(Type t);
+void libererGareA(Type t);
+void libererGareC(Type t);
+void libererGarageTGV(Type t);
+void libererGarageMO(Type t);
+void libererGarageME(Type t);
+void libererGarageGL(Type t);
+void libererEst(Type t);
 
 Voie_t *getVoie(int position, Type type, Direction direction);
 Voie_t *actVoie(Train_t *train);
 Voie_t *nextVoie(Train_t *train);
 
-void dort(int i);
+// Fait avancer le train de une voie
+int avance(Train_t *train);
 
-int libererOuest(Type t);
-int libererGareA(Type t);
-int libererGareC(Type t);
-int libererGarageTGV(Type t);
-int libererGarageMO(Type t);
-int libererGarageME(Type t);
-int libererGarageGL(Type t);
-int libererEst(Type t);
+void printAiguillage();
 
 #endif // AIGUILLAGE_H_INCLUDED
