@@ -1,0 +1,15 @@
+Projet : Gestion de voies ferroviaires, sujet de LO41, P15
+Auteur: Staine Florian
+Date : 17/06/2015
+
+Execution :
+./aiguillage
+
+Modification de paramètres :
+ Pour modifier le fonctionnement du programme,
+ il est nécessaire de modifier directement certaines constantes dans les fichiers sources
+
+Paramètres modifiables (structures.h) :
+ - NB_THREAD : Nombre de trains qui seront créés.
+ - NB_STOCK  : Nombre de trains pouvant être sur la même voie, toutes les voies ne seront pas modifiées (Le tunnel à une capacité de 1, les voies EST et OUEST ont des capacités infinies)
+ - TEMPS     : Le temps de parcours d'une voie (également temps entre chaque affichage)
